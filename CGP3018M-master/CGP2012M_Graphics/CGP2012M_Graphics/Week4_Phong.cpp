@@ -167,10 +167,10 @@ int main(int argc, char *argv[]) {
 	texArray[0].setBuffers();
 	texArray[1].load("..//..//Assets//Textures//wood-texture.jpg");
 	texArray[1].setBuffers();
-	texArray[2].load("..//..//assets//textures//metal-texture.png");
-	texArray[2].setBuffers();/*
-	texArray[3].load("..//..//assets//textures//space.png");
-	texArray[3].setBuffers();*/
+	texArray[2].load("..//..//assets//textures//metal-texture.jpg");
+	texArray[2].setBuffers();
+	texArray[3].load("..//..//assets//textures//Perlin_Noise.jpg");
+	texArray[3].setBuffers();
 
 	errorLabel = 2;
 
@@ -202,6 +202,7 @@ int main(int argc, char *argv[]) {
 	GLuint currentTime = 0;
 	GLuint lastTime = 0;
 	GLuint elapsedTime = 0;
+	GLuint deltaTime = 0;
 
 	float screen[2] = { w, h }; 
 	std::cout << w << " " << h << std::endl;
@@ -237,7 +238,7 @@ int main(int argc, char *argv[]) {
 	modelTranslate = glm::translate(modelTranslate, glm::vec3(0.0f, 0.0f, -1.0f));
 
 	//once only scale to model
-	modelScale = glm::scale(modelScale, glm::vec3(1.0f, 1.0f, 1.0f));
+	modelScale = glm::scale(modelScale, glm::vec3(0.5f, 0.5f, 0.5f));
 	errorLabel = 4;
 
 	//*****************************
@@ -257,7 +258,8 @@ int main(int argc, char *argv[]) {
 
 		//time
 		currentTime = SDL_GetTicks();
-		elapsedTime = currentTime - lastTime;
+		deltaTime = currentTime - lastTime;
+		elapsedTime += deltaTime;
 		lastTime = currentTime;
 
 		//update camera matrix
@@ -290,12 +292,20 @@ int main(int argc, char *argv[]) {
 		//screen resolution
 		//srLocation = glGetUniformLocation(background.shaderProgram, "uSr");
 		//glProgramUniform2fv(background.shaderProgram, srLocation,1, screen);
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texArray[0].texture);
 		background.render();
 
 
 		//set .obj model
 		glUseProgram(model.shaderProgram);
+
+		// get the time uniform from the models shader program
+		timeLocation = glGetUniformLocation(model.shaderProgram, "uTime");
+		float elapsed = ((float)elapsedTime);
+		glProgramUniform1f(model.shaderProgram, timeLocation, elapsed);
+
+
 		//set sphere lighting
 		modelColourLocation = glGetUniformLocation(model.shaderProgram, "uLightColour");
 		glProgramUniform3fv(model.shaderProgram, modelColourLocation, 1, glm::value_ptr(lightCol));
@@ -306,7 +316,7 @@ int main(int argc, char *argv[]) {
 		modelAmbientLocation = glGetUniformLocation(model.shaderProgram, "uAmbientIntensity");
 		glProgramUniform1f(model.shaderProgram, modelAmbientLocation, ambientIntensity);
 		//rotation
-		modelRotate = glm::rotate(modelRotate, (float)elapsedTime / 2000, glm::vec3(0.0f, 1.0f, 0.0f));
+		modelRotate = glm::rotate(modelRotate, (float)deltaTime / 2000, glm::vec3(0.0f, 1.0f, 0.0f));
 		importModelLocation = glGetUniformLocation(model.shaderProgram, "uModel");
 		glUniformMatrix4fv(importModelLocation, 1, GL_FALSE, glm::value_ptr(modelTranslate*modelRotate*modelScale));
 		importViewLocation = glGetUniformLocation(model.shaderProgram, "uView");
@@ -323,9 +333,39 @@ int main(int argc, char *argv[]) {
 		viewPositionLocation = glGetUniformLocation(model.shaderProgram, "uViewPosition");
 		glProgramUniform3fv(model.shaderProgram, viewPositionLocation, 1, glm::value_ptr(cam.cameraPosition ));
 		
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texArray[1].texture); // wood texture
 
-		glBindTexture(GL_TEXTURE_2D, texArray[1].texture);
+		// glActiveTexture sets the current active texture sampler unit (1)
+		glActiveTexture(GL_TEXTURE1);
+		// we get back the ID of the uniform TopTex from the shaderprogram
+		GLint id = glGetUniformLocation(model.shaderProgram, "TopTex");
+		// we set the shader programs value to our shader unit
+		glUniform1i(id, 1);
+		// we bind the shader unit to our texture
+		glBindTexture(GL_TEXTURE_2D, texArray[2].texture); // metal texture
+
+		// glActiveTexture sets the current active texture sampler unit (2)
+		glActiveTexture(GL_TEXTURE2);
+		// we get back the ID of the uniform NoiseText from the shaderprogram
+		GLint nid = glGetUniformLocation(model.shaderProgram, "NoiseTex");
+		// we set the shader programs value to our shader unit
+		glUniform1i(nid, 2);
+		// we bind the shader unit to our texture
+		glBindTexture(GL_TEXTURE_2D, texArray[3].texture); // noise mask
+
+
+		//renders the sphere, need to bind 2nd texture/ that kind of thing first. 
 		model.render();
+
+
+		// clear the render state up again
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
 		//set to wireframe so we can see the circles
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

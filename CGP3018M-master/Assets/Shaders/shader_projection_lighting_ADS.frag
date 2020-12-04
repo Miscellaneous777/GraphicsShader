@@ -9,7 +9,8 @@ in vec3 viewPosition;
 in float time;
 
 uniform sampler2D aTex;		//uniform holding texture info from main programme
-
+uniform sampler2D TopTex;  	//uniform for holding topmost layer
+uniform sampler2D NoiseTex; //uniform for holding noise mask
 
 
 void main()
@@ -44,8 +45,27 @@ void main()
 	float sp = pow(max(dot(viewDirection, reflectDirection), 0.0), 8);
     vec3 specular = specularStrength * sp * lightColour; 
 
-	
-	vec4 textureColour = texture(aTex, textureCoordinate);
+	// Read the RGBA value at the given coord from the texture
+	//vec4 textureColour = texture(aTex, textureCoordinate);
+	vec4 earthtextureColour = texture(aTex, textureCoordinate);
+	vec4 topTexColour = texture(TopTex, textureCoordinate);
+	vec4 noiseColour = texture(NoiseTex, textureCoordinate);
+	float timevalue = (cos(time/1000.0)+1)*0.5;
+	// simplest lerp
+	vec4 textureColour = mix(earthtextureColour, noiseColour, timevalue);
+	float noisemask = pow(noiseColour.r+0.5, 3.0);
+	textureColour = vec4(noisemask,noisemask,noisemask,1.0);
+
+	//vec4 noiseTexColour = texture(NoiseTex, textureCoordinate);
+	//textureColour.r = 1.0;
+	//textureColour.g = 1.0;
+	//textureColour.b = 1.0;
+	//textureColour = topTexColour;
+	//textureColour.r = 0;
+	//textureColour.g = 0;
+	//textureColour.b = 0.5;
+
+	//textureColour = noiseTexColour;
 	
 	//apply no lighting, ambient and diffuse components with colour contributed by texture
 	//vertColour = (textureColour);
