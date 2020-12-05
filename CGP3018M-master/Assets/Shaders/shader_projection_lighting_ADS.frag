@@ -39,7 +39,7 @@ void main()
 	
 	//specular component
 	//**********************************
-	float specularStrength = 1.0f;
+	float specularStrength = 0.3f;
 	vec3 viewDirection = normalize(viewPosition - fragmentPosition);
     vec3 reflectDirection = reflect(-lightDirection, nNormal); 
 	float sp = pow(max(dot(viewDirection, reflectDirection), 0.0), 8);
@@ -50,11 +50,11 @@ void main()
 	vec4 earthtextureColour = texture(aTex, textureCoordinate);
 	vec4 topTexColour = texture(TopTex, textureCoordinate);
 	vec4 noiseColour = texture(NoiseTex, textureCoordinate);
-	float timevalue = (cos(time/1000.0)+1)*0.5;
+	float timevalue = pow((cos(time/1000.0)+1)*1.3, 5);
 	// simplest lerp
-	vec4 textureColour = mix(earthtextureColour, noiseColour, timevalue);
-	float noisemask = pow(noiseColour.r+0.5, 3.0);
-	textureColour = vec4(noisemask,noisemask,noisemask,1.0);
+	vec4 textureColour = mix(earthtextureColour, topTexColour, (pow(noiseColour.r, timevalue)));
+	//float noisemask = pow(noiseColour.r+0.5, 3.0);
+	//textureColour = vec4(noisemask,noisemask,noisemask,1.0);
 
 	//vec4 noiseTexColour = texture(NoiseTex, textureCoordinate);
 	//textureColour.r = 1.0;
