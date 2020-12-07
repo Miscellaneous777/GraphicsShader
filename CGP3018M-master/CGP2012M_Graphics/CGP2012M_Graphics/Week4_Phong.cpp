@@ -152,18 +152,21 @@ int main(int argc, char *argv[]) {
 	//create model
 	//could make this better by specifying the texture in this model header
 	Model model;
+	Model backModel;
 	//create model loader
 	ModelImport modelLoader; 
 	modelLoader.LoadOBJ2("..//..//Assets//Models//OneCrate2.obj", model.vertices, model.texCoords, model.normals, model.indices);
+	// create second crate model
+	modelLoader.LoadOBJ2("..//..//Assets//Models//3Crates.obj", backModel.vertices, backModel.texCoords, backModel.normals, backModel.indices);
 
 	errorLabel = 0;
 
 	//*********************
 	//create texture collection
 	//create textures - space for 4, but only using 2
-	Texture texArray[4];
+	Texture texArray[5];
 	//background texture
-	texArray[0].load("..//..//Assets//Textures//space.png");
+	texArray[0].load("..//..//Assets//Textures//brick-texture.tif");
 	texArray[0].setBuffers();
 	texArray[1].load("..//..//Assets//Textures//wood-texture.jpg");
 	texArray[1].setBuffers();
@@ -171,12 +174,15 @@ int main(int argc, char *argv[]) {
 	texArray[2].setBuffers();
 	texArray[3].load("..//..//assets//textures//Perlin_Noise.jpg");
 	texArray[3].setBuffers();
+	texArray[4].load("..//..//assets//textures//red-square.png");
+	texArray[4].setBuffers();
 
 	errorLabel = 2;
 
 	//OpenGL buffers
 	background.setBuffers();
 	model.setBuffers();
+	backModel.setBuffers();
 
 	errorLabel = 3;
 	//*****************************************
@@ -354,9 +360,25 @@ int main(int argc, char *argv[]) {
 		// we bind the shader unit to our texture
 		glBindTexture(GL_TEXTURE_2D, texArray[3].texture); // noise mask
 
+		// glActiveTexture sets the current active texture sampler unit (3)
+		glActiveTexture(GL_TEXTURE3);
+		// we get back the ID of the uniform NoiseText from the shaderprogram
+		GLint xid = glGetUniformLocation(model.shaderProgram, "BurnTex");
+		// we set the shader programs value to our shader unit
+		glUniform1i(xid, 3);
+		// we bind the shader unit to our texture
+		glBindTexture(GL_TEXTURE_2D, texArray[4].texture); // burn mask
 
 		//renders the sphere, need to bind 2nd texture/ that kind of thing first. 
 		model.render();
+
+		// create second model
+
+		//set .obj model
+		glUseProgram(backModel.shaderProgram);
+
+		backModel.render();
+
 
 
 		// clear the render state up again
@@ -365,6 +387,8 @@ int main(int argc, char *argv[]) {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		//set to wireframe so we can see the circles
@@ -422,7 +446,7 @@ void handleInput()
 				translate = glm::translate(translate, glm::vec3((float)cos(angle)*0.02f, (float)sin(angle)*0.02f, 0.0f));
 				
 				break;
-			case SDLK_a:
+			case SDLK_z:
 				angle += glm::radians(10.0f);
 				rotate = glm::rotate(rotate,glm::radians(10.0f), glm::vec3(0, 1, 0));
 				glm::vec4 temp4 = glm::vec4(cam.cameraPosition, 1.0) * rotate;
@@ -430,40 +454,40 @@ void handleInput()
 				cam.cameraPosition = temp3;
 				std::cout << "cameraPosition" << temp3.x << temp3.y << temp3.z << std::endl;
 				break;
-			case SDLK_d:
+			case SDLK_x:
 				angle -= glm::radians(10.0f);
 				rotate = glm::rotate(rotate, glm::radians(-10.0f) , glm::vec3(0, 1, 0));
 				glm::vec4 temp_d = rotate * glm::vec4(cam.cameraPosition, 1.0);
 				cam.cameraPosition = glm::vec3(cam.cameraPosition);
 				std::cout << "d" << std::endl;
 				break;
-			case SDLK_p:
+			case SDLK_w:
 				//move camera 'forward' in the -ve z direction
 				cam.camZPos -= cam.camSpeed;
 				break;
-			case SDLK_l:
+			case SDLK_s:
 				//move camera 'backwards' in +ve z direction
 				cam.camZPos += cam.camSpeed;
 				break;
-			case SDLK_z:
+			case SDLK_a:
 				//move camera left
 				//move camera target with position
 				cam.camXPos -= cam.camSpeed;
 				cam.camXTarget -= cam.camSpeed;
 				break;
-			case SDLK_x:
+			case SDLK_d:
 				//move camera right
 				//move camera target with position
 				cam.camXPos += cam.camSpeed;
 				cam.camXTarget += cam.camSpeed;
 				break;
 
-			case SDLK_m:
+			case SDLK_SPACE:
 				//move camera up
 				cam.camYPos += cam.camSpeed;
 				cam.camYTarget += cam.camSpeed;
 				break;
-			case SDLK_k:
+			case SDLK_LSHIFT:
 				//move camera down
 				cam.camYPos -= cam.camSpeed;
 				cam.camYTarget -= cam.camSpeed;

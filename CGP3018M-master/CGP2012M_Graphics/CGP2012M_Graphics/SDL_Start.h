@@ -13,7 +13,7 @@ public:
 		SDL_Init(SDL_INIT_EVERYTHING);
 
 		//SDL create window
-		win = SDL_CreateWindow("OpenGL Window", 100, 100, 800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+		win = SDL_CreateWindow("Graphics Assignment 1", 100, 100, 1920, 1080, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP);
 
 		//set context attributes
 		//sets opengl version to 4.3
